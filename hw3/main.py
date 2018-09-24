@@ -86,10 +86,10 @@ def train(epoch):
         loss.backward()
         optimizer.step()
 
-        train_loss += loss.data.cpu().numpy()
+        train_loss += loss[0]
         _, predicted = outputs.max(1)
         total += targets.size(0)
-        correct += predicted.eq(targets).sum().data.cpu().numpy()
+        correct += int(predicted.eq(targets).sum()[0])
 
         print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
@@ -101,22 +101,21 @@ def test(epoch):
     test_loss = 0
     correct = 0
     total = 0
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
-            if device == "cuda":
-                inputs, targets = Variable(inputs).cuda(), Variable(targets).cuda()
-            else:
-                inputs, targets = Variable(inputs).cpu(), Variable(targets).cpu()
-            outputs = net(inputs)
-            loss = criterion(outputs, targets)
+    for batch_idx, (inputs, targets) in enumerate(testloader):
+        if device == "cuda":
+            inputs, targets = Variable(inputs, volatile=True).cuda(), Variable(targets, volatile=True).cuda()
+        else:
+            inputs, targets = Variable(inputs, volatile=True).cpu(), Variable(targets, volatile=True).cpu()
+        outputs = net(inputs)
+        loss = criterion(outputs, targets)
 
-            test_loss += loss.data.cpu().numpy()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().data.cpu().numpy()
+        test_loss += loss[0]
+        _, predicted = outputs.max(1)
+        total += targets.size(0)
+        correct += int(predicted.eq(targets).sum()[0])
 
-            print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+            % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
     # Save checkpoint.
     acc = 100.*correct/total
