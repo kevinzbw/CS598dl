@@ -73,7 +73,10 @@ def train(epoch):
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
-        inputs, targets = inputs.to(device), targets.to(device)
+        if device == "cuda":
+                inputs, targets = inputs.cuda(), targets.cuda()
+            else:
+                inputs, targets = inputs.cpu(), targets.cpu()
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, targets)
