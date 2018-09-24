@@ -65,7 +65,7 @@ if args.resume:
     start_epoch = checkpoint['epoch']
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-4)
+optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-3)
 
 # Training
 training_acc = []
