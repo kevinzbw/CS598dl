@@ -2,9 +2,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
+from torch.autograd import Variable
 
 import torchvision
 import torchvision.transforms as transforms
+
+
 
 import os
 import argparse
@@ -74,19 +77,19 @@ def train(epoch):
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         if device == "cuda":
-            inputs, targets = inputs.cuda(), targets.cuda()
+            inputs, targets = Variable(inputs).cuda(), Variable(targets).cuda()
         else:
-            inputs, targets = inputs.cpu(), targets.cpu()
+            inputs, targets = Variable(inputs).cpu(), Variable(targets).cpu()
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
 
-        train_loss += loss.item()
+        train_loss += loss.data.cpu().numpy()
         _, predicted = outputs.max(1)
         total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
+        correct += predicted.eq(targets).sum().data.cpu().numpy()
 
         print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
@@ -101,16 +104,16 @@ def test(epoch):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             if device == "cuda":
-                inputs, targets = inputs.cuda(), targets.cuda()
+                inputs, targets = Variable(inputs).cuda(), Variable(targets).cuda()
             else:
-                inputs, targets = inputs.cpu(), targets.cpu()
+                inputs, targets = Variable(inputs).cpu(), Variable(targets).cpu()
             outputs = net(inputs)
             loss = criterion(outputs, targets)
 
-            test_loss += loss.item()
+            test_loss += loss.data.cpu().numpy()
             _, predicted = outputs.max(1)
             total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+            correct += predicted.eq(targets).sum().data.cpu().numpy()
 
             print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                 % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
