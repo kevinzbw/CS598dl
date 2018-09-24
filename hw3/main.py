@@ -90,7 +90,7 @@ def train(epoch):
 
         print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-        training_acc.append(100.*correct/total)
+    training_acc.append(100.*correct/total)
 
 def test(epoch):
     global best_acc
@@ -132,7 +132,10 @@ def test(epoch):
 
 for epoch in range(start_epoch, start_epoch+200):
     train(epoch)
-    test(epoch)
+    if epoch % 10 == 0:
+        test(epoch)
+        print(training_acc)
+        print(best_acc)
 
-print(training_acc)
-print(best_acc)
+# print(training_acc)
+# print(best_acc)

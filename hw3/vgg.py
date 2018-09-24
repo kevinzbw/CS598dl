@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torch.autograd import Variable
 
 cfg = {
     'myVGG': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M']
@@ -12,6 +13,7 @@ class VGG(nn.Module):
         self.classifier = nn.Linear(512, 10)
 
     def forward(self, x):
+        x = Variable(x)
         out = self.features(x)
         out = out.view(out.size(0), -1)
         out = self.classifier(out)
