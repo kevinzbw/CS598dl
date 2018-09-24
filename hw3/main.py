@@ -71,11 +71,11 @@ if args.resume:
     start_epoch = checkpoint['epoch']
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-2)
+optimizer = optim.Adamax(net.parameters(), lr=0.002, weight_decay=5e-4)
 
 # Training
-test_acc = []
-test_loss = []
+test_acc_ep = []
+test_loss_ep = []
 def train(epoch):
     print('\nTraining Epoch: %d' % epoch)
     net.train()
@@ -137,8 +137,8 @@ def test(epoch):
 
                 print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                     % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-        test_acc.append(100.*correct/total)
-        test_loss = test_loss/(batch_idx+1)
+        test_acc_ep.append(100.*correct/total)
+        test_loss_ep.append(test_loss/(batch_idx+1))
         
 
     # Save checkpoint.
@@ -158,8 +158,8 @@ def test(epoch):
 for epoch in range(start_epoch, start_epoch+31):
     train(epoch)
     test(epoch)
-    print(test_acc)
-    print(test_loss)
+    print(test_acc_ep)
+    print(test_loss_ep)
     print(best_acc)
 
 # print(training_acc)
