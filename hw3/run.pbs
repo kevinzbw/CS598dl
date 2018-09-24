@@ -9,4 +9,4 @@ cd ~/DeepLearning/hw3
 . /opt/modules/default/init/bash
 module load bwpy
 module load cudatoolkit
-aprun -n 1 -N 1 python main.py 2
+aprun -n 1 -N 1 python main.py

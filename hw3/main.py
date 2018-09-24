@@ -97,7 +97,10 @@ def test(epoch):
     total = 0
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
-            inputs, targets = inputs.to(device), targets.to(device)
+            if device == "cuda":
+                inputs, targets = inputs.cuda(), targets.cuda()
+            else:
+                inputs, targets = inputs.cpu(), targets.cpu()
             outputs = net(inputs)
             loss = criterion(outputs, targets)
 
