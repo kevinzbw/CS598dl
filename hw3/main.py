@@ -18,6 +18,7 @@ from vgg import VGG
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
+parser.add_argument('--mc', action='store_true', help='monte carlo dropout')
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -46,15 +47,20 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False,
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
+sampling_times = 10
+if args.mc:
+    print("\n==> Using MC dropout, sampling times", sampling_times, "\n")
+else:
+    print("\n==> Using heuristic dropout\n")
+
+
 print('==> Loading the network')
 net = VGG('myVGG')
 
+net = net.to(device)
 if device == 'cuda':
-    net = net.cuda()
     net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
-else:
-    net = net.cpu()
 
 if args.resume:
     print('==> Resuming from checkpoint..')
@@ -65,57 +71,75 @@ if args.resume:
     start_epoch = checkpoint['epoch']
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-3)
+optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-2)
 
 # Training
-training_acc = []
+test_acc = []
+test_loss = []
 def train(epoch):
-    print('\nEpoch: %d' % epoch)
+    print('\nTraining Epoch: %d' % epoch)
     net.train()
     train_loss = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
-        if device == "cuda":
-            inputs, targets = Variable(inputs).cuda(), Variable(targets).cuda()
-        else:
-            inputs, targets = Variable(inputs).cpu(), Variable(targets).cpu()
+        inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
 
-        train_loss += loss[0]
+        train_loss += loss.item()
         _, predicted = outputs.max(1)
         total += targets.size(0)
-        correct += int(predicted.eq(targets).sum()[0])
+        correct += predicted.eq(targets).sum().item()
 
         print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-    training_acc.append(100.*correct/total)
+        
 
 def test(epoch):
     global best_acc
+    print('\nTesting Epoch: %d' % epoch)
     net.eval()
     test_loss = 0
     correct = 0
     total = 0
-    for batch_idx, (inputs, targets) in enumerate(testloader):
-        if device == "cuda":
-            inputs, targets = Variable(inputs, volatile=True).cuda(), Variable(targets, volatile=True).cuda()
+    with torch.no_grad():
+        if args.mc:
+            for batch_idx, (inputs, targets) in enumerate(testloader):
+                sum_loss = None
+                sum_outputs = None
+                for _ in range(sampling_times):
+                    inputs, targets = inputs.to(device), targets.to(device)
+                    outputs = net(inputs)
+                    loss = criterion(outputs, targets)
+                    sum_outputs = outputs if sum_outputs is None else sum_outputs+outputs
+                    sum_loss = loss if sum_loss is None else sum_loss+loss
+                test_loss += sum_loss.item() / sampling_times
+                _, predicted = sum_outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
+
+                print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                    % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
         else:
-            inputs, targets = Variable(inputs, volatile=True).cpu(), Variable(targets, volatile=True).cpu()
-        outputs = net(inputs)
-        loss = criterion(outputs, targets)
+            for batch_idx, (inputs, targets) in enumerate(testloader):
+                inputs, targets = inputs.to(device), targets.to(device)
+                outputs = net(inputs)
+                loss = criterion(outputs, targets)
 
-        test_loss += loss[0]
-        _, predicted = outputs.max(1)
-        total += targets.size(0)
-        correct += int(predicted.eq(targets).sum()[0])
+                test_loss += loss.item()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
 
-        print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-            % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+                print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                    % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        test_acc.append(100.*correct/total)
+        test_loss = test_loss/(batch_idx+1)
+        
 
     # Save checkpoint.
     acc = 100.*correct/total
@@ -131,13 +155,12 @@ def test(epoch):
         torch.save(state, './checkpoint/ckpt.t7')
         best_acc = acc
 
-
-for epoch in range(start_epoch, start_epoch+41):
+for epoch in range(start_epoch, start_epoch+31):
     train(epoch)
-    if epoch % 10 == 0:
-        test(epoch)
-        print(training_acc)
-        print(best_acc)
+    test(epoch)
+    print(test_acc)
+    print(test_loss)
+    print(best_acc)
 
 # print(training_acc)
 # print(best_acc)

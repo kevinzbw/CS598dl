@@ -1,5 +1,5 @@
 import torch.nn as nn
-
+import torch.nn.functional as F
 cfg = {
     'myVGG': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M']
 }
@@ -10,9 +10,12 @@ class VGG(nn.Module):
         super(VGG, self).__init__()
         self.features = self._make_layers(cfg[vgg_name])
         self.classifier = nn.Linear(512, 10)
+        self.AvgPool = nn.AvgPool2d(kernel_size=1, stride=1)
 
     def forward(self, x):
         out = self.features(x)
+        out = F.dropout2d(out, p=0.4, training=True)
+        out = self.AvgPool(out)
         out = out.view(out.size(0), -1)
         out = self.classifier(out)
         return out
@@ -28,5 +31,4 @@ class VGG(nn.Module):
                            nn.BatchNorm2d(x),
                            nn.ReLU(inplace=True)]
                 in_channels = x
-        layers += [nn.AvgPool2d(kernel_size=1, stride=1), nn.Dropout2d(p=0.5, inplace=True)]
         return nn.Sequential(*layers)
