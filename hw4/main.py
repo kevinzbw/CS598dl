@@ -12,12 +12,11 @@ import torchvision.transforms as transforms
 import os
 import argparse
 
-from cnn import VGG
+from resnet import myResNet
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
-parser.add_argument('--mc', action='store_true', help='monte carlo dropout')
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -38,23 +37,16 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
+trainset = torchvision.datasets.CIFAR100(root='./data', train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
 
-testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+testset = torchvision.datasets.CIFAR100(root='./data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 
-classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-
-sampling_times = 10
-if args.mc:
-    print("\n==> Using MC dropout, sampling times", sampling_times, "\n")
-else:
-    print("\n==> Using heuristic dropout\n")
-
+# classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
 print('==> Loading the network')
-net = VGG('myVGG')
+net = myResNet(100)
 
 net = net.to(device)
 if device == 'cuda':
@@ -79,6 +71,12 @@ def train(epoch):
         outputs = net(inputs)
         loss = lossFunction(outputs, targets)
         loss.backward()
+        if epoch > 6:
+            for group in optimizer.param_groups:
+                for p in group['params']:
+                    state = optimizer.state[p]
+                    if(state['step']>=1024):
+                        state['step'] = 1000
         optimizer.step()
 
         train_loss += loss.item()
@@ -98,36 +96,18 @@ def test(epoch):
     correct = 0
     total = 0
     with torch.no_grad():
-        if args.mc:
-            for batch_idx, (inputs, targets) in enumerate(testloader):
-                sum_loss = None
-                sum_outputs = None
-                for _ in range(sampling_times):
-                    inputs, targets = inputs.to(device), targets.to(device)
-                    outputs = net(inputs)
-                    loss = lossFunction(outputs, targets)
-                    sum_outputs = outputs if sum_outputs is None else sum_outputs+outputs
-                    sum_loss = loss if sum_loss is None else sum_loss+loss
-                test_loss += sum_loss.item() / sampling_times
-                _, predicted = sum_outputs.max(1)
-                total += targets.size(0)
-                correct += predicted.eq(targets).sum().item()
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs = net(inputs)
+            loss = lossFunction(outputs, targets)
 
-                print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                    % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-        else:
-            for batch_idx, (inputs, targets) in enumerate(testloader):
-                inputs, targets = inputs.to(device), targets.to(device)
-                outputs = net(inputs)
-                loss = criterion(outputs, targets)
+            test_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
 
-                test_loss += loss.item()
-                _, predicted = outputs.max(1)
-                total += targets.size(0)
-                correct += predicted.eq(targets).sum().item()
-
-                print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                    % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+            print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
         test_acc_ep.append(100.*correct/total)
         test_loss_ep.append(test_loss/(batch_idx+1))
         
@@ -135,7 +115,7 @@ def test(epoch):
     if acc > best_acc:
         best_acc = acc
 
-for epoch in range(start_epoch, start_epoch+31):
+for epoch in range(start_epoch, start_epoch+201):
     train(epoch)
     test(epoch)
     print(test_acc_ep)
