@@ -54,7 +54,7 @@ if device == 'cuda':
     cudnn.benchmark = True
 
 lossFunction = nn.CrossEntropyLoss()
-optimizer = optim.Adam(net.parameters(), lr=0.002, weight_decay=5e-4)
+optimizer = optim.Adam(net.parameters(), lr=0.001, weight_decay=5e-4)
 
 
 test_acc_ep = []
@@ -115,7 +115,7 @@ def test(epoch):
     if acc > best_acc:
         best_acc = acc
 
-for epoch in range(start_epoch, start_epoch+201):
+for epoch in range(start_epoch, start_epoch+91):
     train(epoch)
     test(epoch)
     print(test_acc_ep)
