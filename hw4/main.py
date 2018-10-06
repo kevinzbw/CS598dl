@@ -7,6 +7,7 @@ from torch.autograd import Variable
 import torchvision
 import torchvision.transforms as transforms
 
+from torch.utils import *
 
 
 import os
@@ -15,8 +16,8 @@ import argparse
 from resnet import myResNet
 
 
-parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+parser = argparse.ArgumentParser(description='PyTorch CIFAR100 Training')
+parser.add_argument('--pre', help='load pretrained', action='store_true')
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -28,6 +29,7 @@ print('==> Preparing data..')
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
+    transforms.Resize(224, interpolation=2),
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
@@ -45,8 +47,16 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False,
 
 # classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-print('==> Loading the network')
-net = myResNet(100)
+if args.pre:
+    print('==> Loading the pretrained network')
+    model_urls = {
+    'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth'
+    }
+    net = torchvision.models.resnet.ResNet(torchvision.models.resnet.BasicBlock,[2,2,2,2])
+    net.load_state_dict(model_zoo.load_url(model_urls["resnet18"], model_dir ="./Model/"))
+else:
+    print('==> Loading my ResNet network')
+    net = myResNet(100)
 
 net = net.to(device)
 if device == 'cuda':
