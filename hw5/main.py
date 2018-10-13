@@ -18,6 +18,7 @@ from imageNetDataset import ImageNetDataset
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR100 Training')
+parser.add_argument('--blue', action='store_true', help='use bluewater')
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -47,13 +48,19 @@ n_triplets_per_sample = 1
 batch_size = 128
 TOP30 = 30
 
-triplet_trainset = TripletImageNetDataset(root="./tiny-imagenet-200/train", n_triplets_per_sample=n_triplets_per_sample, transform=transform_train)
+train_root = "./tiny-imagenet-200/train"
+test_root = "./tiny-imagenet-200/val"
+if args.blue:
+    train_root = "/projects/training/bauh/tiny-imagenet-200/train"
+    test_root = "/projects/training/bauh/tiny-imagenet-200/val"
+
+triplet_trainset = TripletImageNetDataset(root=train_root, n_triplets_per_sample=n_triplets_per_sample, transform=transform_train)
 triplet_trainloader = torch.utils.data.DataLoader(triplet_trainset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 class_to_idx = triplet_trainset.get_class_to_idx()
 print(class_to_idx)
 
-testset = ImageNetDataset(root='./tiny-imagenet-200/val', annotations="val_annotations.txt", class_to_idx=class_to_idx, transform=transform_test)
+testset = ImageNetDataset(root=test_root, annotations="val_annotations.txt", class_to_idx=class_to_idx, transform=transform_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=2)
 
 print("==> Finished loading data")
@@ -107,7 +114,7 @@ def get_codebook(epoch):
             imagebook[batch_idx*batch_size:(batch_idx+1)*batch_size] = img_path
     np.savetxt("codebook_{}.np".format(epoch), codebook)
     np.savetxt("classbook_{}.np".format(epoch), classbook)
-    with open("imagebook_{}.pkl".format(epoch), "wb") as fout:
+    with open("imagebook_{}.pkl", "wb") as fout:
         pkl.dump(imagebook, fout)
     return codebook, classbook, imagebook
 
