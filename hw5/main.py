@@ -87,7 +87,7 @@ def train(epoch):
         out_neg = net(neg)
         loss = lossFunction(out_achnor, out_pos, out_neg)
         loss.backward()
-        if epoch > 6:
+        if epoch > 2:
             for group in optimizer.param_groups:
                 for p in group['params']:
                     state = optimizer.state[p]
