@@ -45,7 +45,7 @@ transform_test = transforms.Compose([
 ])
 
 n_triplets_per_sample = 1
-batch_size = 128
+batch_size = 64
 TOP30 = 30
 
 train_root = "./tiny-imagenet-200/train"
