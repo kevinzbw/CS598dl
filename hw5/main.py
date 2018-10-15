@@ -175,7 +175,7 @@ def get_test_acc(epoch, codebook, classbook):
 
 
 
-test_epoch = [30, 60, 90]
+test_epoch = [1, 10, 30, 60, 90]
 
 for epoch in range(start_epoch, start_epoch+91):
     train(epoch)

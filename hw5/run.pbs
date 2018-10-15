@@ -9,4 +9,4 @@ cd ~/DeepLearning/hw5
 . /opt/modules/default/init/bash
 module load bwpy/2.0.0-pre1
 module load cudatoolkit
-aprun -n 1 -N 1 python3.6 main.py --blue
+aprun -n 1 -N 1 python3.6 main.py
