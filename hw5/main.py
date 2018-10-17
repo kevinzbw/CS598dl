@@ -144,7 +144,7 @@ def get_test_acc(epoch, codebook, classbook):
                 correct += get_correct(outputs[i], targets[i])
             overall_correct += correct
             overall_total += total
-            print(batch_idx, len(testloader), 'Acc: %.3f (%d/%d)' % correct/total, correct, total)
+            print(batch_idx, len(testloader), 'Acc: %.3f (%d/%d)' % (correct/total, correct, total))
     print('Overall Acc: %.3f (%d/%d)' % overall_correct/overall_total, overall_correct, overall_total)
     test_acc_ep.append((epoch, overall_correct/overall_total))
 
