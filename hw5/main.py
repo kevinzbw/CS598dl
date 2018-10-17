@@ -44,6 +44,7 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
+model_dir = "model"
 n_triplets_per_sample = 1
 batch_size = 64
 TOP30 = 30
@@ -112,9 +113,9 @@ def get_codebook(epoch):
             codebook[batch_idx*batch_size:(batch_idx+1)*batch_size, :] = out_img
             classbook[batch_idx*batch_size:(batch_idx+1)*batch_size] = pos_class
             imagebook[batch_idx*batch_size:(batch_idx+1)*batch_size] = img_path
-    np.savetxt("codebook_{}.np".format(epoch), codebook)
-    np.savetxt("classbook_{}.np".format(epoch), classbook)
-    with open("imagebook_{}.pkl", "wb") as fout:
+    np.savetxt("{}/codebook_{}.np".format(model_dir, epoch), codebook)
+    np.savetxt("{}/classbook_{}.np".format(model_dir, epoch), classbook)
+    with open("{}/imagebook_{}.pkl".format(model_dir, epoch), "wb") as fout:
         pkl.dump(imagebook, fout)
     return codebook, classbook, imagebook
 
@@ -135,8 +136,8 @@ def get_test_acc(epoch, codebook, classbook):
         for batch_idx, (inputs, targets, _) in enumerate(testloader):
             inputs = inputs.to(device)
             outputs = net(inputs)
-            outputs = outputs.numpy()
-            targets = targets.numpy()
+            outputs = outputs.cpu().numpy()
+            targets = targets.cpu().numpy()
             print("Finished inference")
             correct, total = 0, len(inputs)*TOP30
             for i in range(len(outputs)):
@@ -180,7 +181,7 @@ test_epoch = [1, 10, 30, 60, 90]
 for epoch in range(start_epoch, start_epoch+91):
     train(epoch)
     if epoch in test_epoch:
-        torch.save(net.state_dict(), "checkpoint_{}.pth".format(epoch))
+        torch.save(net.state_dict(), "{}/checkpoint_{}.pth".format(model_dir, epoch))
         print("==> getting code")
         codebook, classbook, imagebook = get_codebook(epoch)
         print("==> finished getting code")
