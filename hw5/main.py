@@ -17,7 +17,7 @@ from tripletImageNetDataset import TripletImageNetDataset
 from imageNetDataset import ImageNetDataset
 
 
-parser = argparse.ArgumentParser(description='PyTorch CIFAR100 Training')
+parser = argparse.ArgumentParser(description='PyTorch Training')
 parser.add_argument('--blue', action='store_true', help='use bluewater')
 args = parser.parse_args()
 
@@ -66,7 +66,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle
 
 print("==> Finished loading data")
 
-net = torchvision.models.resnet18(pretrained=True)
+net = torchvision.models.resnet101(pretrained=True)
 
 net = net.to(device)
 if device == 'cuda':
@@ -147,33 +147,6 @@ def get_test_acc(epoch, codebook, classbook):
             print(batch_idx, len(testloader), 'Acc: %.3f (%d/%d)' % (correct/total, correct, total))
     print('Overall Acc: %.3f (%d/%d)' % (overall_correct/overall_total, overall_correct, overall_total))
     test_acc_ep.append((epoch, overall_correct/overall_total))
-
-# def test(epoch):
-#     global best_acc
-#     print('\nTesting Epoch: %d' % epoch)
-#     net.eval()
-#     test_loss = 0
-#     correct = 0
-#     total = 0
-#     with torch.no_grad():
-#         for batch_idx, (inputs, targets) in enumerate(testloader):
-#             inputs, targets = inputs.to(device), targets.to(device)
-#             outputs = net(inputs)
-
-#             test_loss += loss.item()
-#             _, predicted = outputs.max(1)
-#             total += targets.size(0)
-#             correct += predicted.eq(targets).sum().item()
-
-#             print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-#                 % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-#         test_acc_ep.append(100.*correct/total)
-#         test_loss_ep.append(test_loss/(batch_idx+1))
-        
-#     acc = 100.*correct/total
-#     if acc > best_acc:
-#         best_acc = acc
-
 
 
 test_epoch = [1, 10, 30, 60, 90]
