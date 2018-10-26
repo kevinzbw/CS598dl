@@ -44,7 +44,7 @@ testloader = enumerate(testloader)
 
 print('==> Loading the network')
 
-model = torch.load('model/cifar10.model')
+model = torch.load('model/cifar10.model'
 model = model.to(device)
 model.eval()
 
@@ -52,7 +52,7 @@ if device == 'cuda':
     model = torch.nn.DataParallel(model)
     cudnn.benchmark = True
 
-batch_idx, (X_batch, Y_batch) = next(testloader)
+batch_idx, (X_batch, Y_batch) = testloader.next()
 X_batch = Variable(X_batch,requires_grad=True).to(device)
 Y_batch_alternate = (Y_batch + 1)%10
 Y_batch_alternate = Variable(Y_batch_alternate).to(device)
