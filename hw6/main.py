@@ -156,7 +156,7 @@ def train(epoch):
 
             check_grad(optimizer_g)
             optimizer_g.step()
-        
+
         # train D
         if((batch_idx%gen_train)==0):
             for p in aD.parameters():
@@ -174,8 +174,8 @@ def train(epoch):
         noise[np.arange(batch_size), :n_classes] = label_onehot[np.arange(batch_size)]
         noise = noise.astype(np.float32)
         noise = torch.from_numpy(noise)
-        noise = Variable(noise).cuda()
-        fake_label = Variable(torch.from_numpy(label)).cuda()
+        noise = Variable(noise).to(device)
+        fake_label = Variable(torch.from_numpy(label)).to(device)
         with torch.no_grad():
             fake_data = aG(noise)
 
@@ -185,8 +185,8 @@ def train(epoch):
         disc_fake_class = criterion(disc_fake_class, fake_label)
 
         # train discriminator with input from the discriminator
-        real_data = Variable(X_train_batch).cuda()
-        real_label = Variable(Y_train_batch).cuda()
+        real_data = Variable(X_train_batch).to(device)
+        real_label = Variable(Y_train_batch).to(device)
 
         disc_real_source, disc_real_class = aD(real_data)
 

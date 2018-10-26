@@ -42,8 +42,8 @@ class Generator(nn.Module):
 
     def forward(self, x):
         out = self.linear(x)
-        out = out.reshape(196, 4, 4)
-        out = self.features(x)
+        out = out.reshape(out.size(0), 196, 4, 4)
+        out = self.features(out)
         return out
 
     def _make_layers(self, cfg):
