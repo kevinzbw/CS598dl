@@ -54,8 +54,6 @@ class Discriminator(nn.Module):
         self.conv2 = nn.Conv2d(196, 196, kernel_size=3, stride=2, padding=1)
         self.conv3 = nn.Conv2d(196, 196, kernel_size=3, stride=1, padding=1)
         self.conv4 = nn.Conv2d(196, 196, kernel_size=3, stride=2, padding=1)
-        # conv4, conv8 = conv2
-        # conv5, conv6, conv7 = conv3
         self.conv5 = nn.Conv2d(196, 196, kernel_size=3, stride=1, padding=1)
         self.conv6 = nn.Conv2d(196, 196, kernel_size=3, stride=1, padding=1)
         self.conv7 = nn.Conv2d(196, 196, kernel_size=3, stride=1, padding=1)
