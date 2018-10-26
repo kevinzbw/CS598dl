@@ -241,7 +241,7 @@ def test(epoch):
             accuracy_test = np.mean(test_accu)
     print('Testing', accuracy_test)
 
-def eval_noise():
+def eval_noise(epoch):
     with torch.no_grad():
         aG.eval()
         samples = aG(save_noise)
@@ -260,7 +260,7 @@ for epoch in range(start_epoch, start_epoch+200):
     train(epoch)
     test(epoch)
     print("Time", time.time()-start_time)
-    eval_noise()
+    eval_noise(epoch)
     if(((epoch+1)%1)==0):
         torch.save(aG,'model/tempG.model')
         torch.save(aD,'model/tempD.model')
