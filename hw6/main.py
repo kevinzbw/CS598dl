@@ -109,6 +109,12 @@ noise = noise.astype(np.float32)
 save_noise = torch.from_numpy(noise)
 save_noise = Variable(save_noise).to(device)
 
+def check_grad(optimizer):
+    for group in optimizer.param_groups:
+        for p in group['params']:
+            state = optimizer.state[p]
+            if('step' in state and state['step']>=1024):
+                state['step'] = 1000
 
 def train(epoch):
     print('\nTraining Epoch: %d' % epoch)
@@ -146,6 +152,7 @@ def train(epoch):
             gen_cost = -gen_source + gen_class
             gen_cost.backward()
 
+            check_grad(optimizer_g)
             optimizer_g.step()
         
         # train D
@@ -191,6 +198,7 @@ def train(epoch):
         disc_cost = disc_fake_source - disc_real_source + disc_real_class + disc_fake_class + gradient_penalty
         disc_cost.backward()
 
+        check_grad(optimizer_d)
         optimizer_d.step()
 
         # loss
