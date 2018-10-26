@@ -74,9 +74,6 @@ def train(epoch):
         for param_group in optimizer.param_groups:
             param_group['lr'] = learning_rate/100.0
     net.train()
-    train_loss = 0
-    correct = 0
-    total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
         _, out_fc10 = net(inputs)
@@ -85,22 +82,13 @@ def train(epoch):
         
         optimizer.zero_grad()
         loss.backward()
-        if epoch > 2:
-            for group in optimizer.param_groups:
-                for p in group['params']:
-                    state = optimizer.state[p]
-                    if 'step' in state and state['step']>=1024:
-                        state['step'] = 1000
+        # if epoch > 2:
+        #     for group in optimizer.param_groups:
+        #         for p in group['params']:
+        #             state = optimizer.state[p]
+        #             if 'step' in state and state['step']>=1024:
+        #                 state['step'] = 1000
         optimizer.step()
-
-        # train_loss += loss.item()
-        # _, predicted = out_fc10.max(1)
-        # total += targets.size(0)
-        # correct += predicted.eq(targets).sum().item()
-
-        # print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-        #     % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-        
 
 def test(epoch):
     global best_acc
