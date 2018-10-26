@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training GAN')
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-best_acc = 0
+
 start_epoch = 0
 
 batch_size = 128
@@ -70,10 +70,6 @@ criterion = nn.CrossEntropyLoss()
 optimizer_g = torch.optim.Adam(aG.parameters(), lr=learning_rate, betas=(0,0.9))
 optimizer_d = torch.optim.Adam(aD.parameters(), lr=learning_rate, betas=(0,0.9))
 
-
-test_acc_ep = []
-test_loss_ep = []
-
 def calc_gradient_penalty(netD, real_data, fake_data):
     DIM = 32
     LAMBDA = 10
@@ -116,7 +112,6 @@ save_noise = Variable(save_noise).to(device)
 
 def train(epoch):
     print('\nTraining Epoch: %d' % epoch)
-    start_time = time.time()
     # Train the model
     loss1, loss2, loss3, loss4, loss5 = [], [], [], [], []
     acc1 = []
@@ -214,7 +209,6 @@ def train(epoch):
                                     "%.2f" % np.mean(acc1))
         
 def test(epoch):
-    global best_acc
     print('\nTesting Epoch: %d' % epoch)
     # Test the model
     aD.eval()
@@ -230,19 +224,31 @@ def test(epoch):
             accuracy = ( float( prediction.eq(Y_test_batch.data).sum() ) /float(batch_size))*100.0
             test_accu.append(accuracy)
             accuracy_test = np.mean(test_accu)
-    print('Testing',accuracy_test, time.time()-start_time)
-        
-    acc = 100.*correct/total
-    if acc > best_acc:
-        best_acc = acc
+    print('Testing', accuracy_test)
 
-for epoch in range(start_epoch, start_epoch+100):
+def eval_noise():
+    with torch.no_grad():
+        aG.eval()
+        samples = aG(save_noise)
+        samples = samples.data.cpu().numpy()
+        samples += 1.0
+        samples /= 2.0
+        samples = samples.transpose(0,2,3,1)
+        aG.train()
+
+    fig = plot(samples)
+    plt.savefig('output/%s.png' % str(epoch).zfill(3), bbox_inches='tight')
+    plt.close(fig)
+    
+for epoch in range(start_epoch, start_epoch+200):
+    start_time = time.time()
     train(epoch)
-    if epoch % 20 == 0:
-        torch.save(net,'model/cifar10_{}.model'.format(epoch))
+    test(epoch)
+    print("Time", time.time()-start_time)
+    eval_noise()
+    if(((epoch+1)%1)==0):
+        torch.save(aG,'model/tempG.model')
+        torch.save(aD,'model/tempD.model')
 
-test(100)
-print(test_acc_ep)
-print(test_loss_ep)
-print(best_acc)
-torch.save(net,'model/cifar10_100.model')
+torch.save(aG,'model/generator.model')
+torch.save(aD,'model/discriminator.model')
