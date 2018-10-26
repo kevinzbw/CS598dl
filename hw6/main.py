@@ -130,6 +130,8 @@ def train(epoch):
         if((batch_idx%gen_train)==0):
             for p in aD.parameters():
                 p.requires_grad_(False)
+            for p in aG.parameters():
+                p.requires_grad_(True)
 
             aG.zero_grad()
 
@@ -156,10 +158,11 @@ def train(epoch):
             optimizer_g.step()
         
         # train D
-        for p in aD.parameters():
-            p.requires_grad_(True)
-        for p in aG.parameters():
-            p.requires_grad_(False)
+        if((batch_idx%gen_train)==0):
+            for p in aD.parameters():
+                p.requires_grad_(True)
+            for p in aG.parameters():
+                p.requires_grad_(False)
 
         aD.zero_grad()
 
