@@ -65,6 +65,14 @@ optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
 
 test_acc_ep = []
 test_loss_ep = []
+
+def check_grad(optimizer):
+    for group in optimizer.param_groups:
+        for p in group['params']:
+            state = optimizer.state[p]
+            if('step' in state and state['step']>=1024):
+                state['step'] = 1000
+
 def train(epoch):
     print('\nTraining Epoch: %d' % epoch)
     if(epoch==50):
@@ -82,12 +90,7 @@ def train(epoch):
         
         optimizer.zero_grad()
         loss.backward()
-        # if epoch > 2:
-        #     for group in optimizer.param_groups:
-        #         for p in group['params']:
-        #             state = optimizer.state[p]
-        #             if 'step' in state and state['step']>=1024:
-        #                 state['step'] = 1000
+        check_grad(optimizer)
         optimizer.step()
 
 def test(epoch):
@@ -119,7 +122,7 @@ def test(epoch):
 
 for epoch in range(start_epoch, start_epoch+100):
     train(epoch)
-    if epoch % 20 == 0:
+    if (epoch+1) % 20 == 0:
         torch.save(net,'model/cifar10_{}.model'.format(epoch))
 
 test(100)
