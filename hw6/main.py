@@ -16,6 +16,10 @@ import numpy as np
 from gan import Generator, Discriminator
 from utils import plot
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training GAN')
 # parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
 args = parser.parse_args()
@@ -226,7 +230,7 @@ def test(epoch):
     with torch.no_grad():
         test_accu = []
         for batch_idx, (X_test_batch, Y_test_batch) in enumerate(testloader):
-            X_test_batch, Y_test_batch= Variable(X_test_batch).cuda(),Variable(Y_test_batch).cuda()
+            X_test_batch, Y_test_batch= Variable(X_test_batch).to(device),Variable(Y_test_batch).to(device)
 
             with torch.no_grad():
                 _, output = aD(X_test_batch)
