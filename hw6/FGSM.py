@@ -19,6 +19,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+import numpy as np
+
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training GAN')
 # parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
 args = parser.parse_args()
