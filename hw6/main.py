@@ -8,12 +8,13 @@ import torchvision
 import torchvision.transforms as transforms
 
 
-
+import time
 import os
 import argparse
+import numpy as np
 
 from gan import Generator, Discriminator
-
+from utils import plot
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training GAN')
 # parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
@@ -51,79 +52,185 @@ testset = torchvision.datasets.CIFAR10(root='./', train=False, download=False, t
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=8)
 
 print('==> Loading the network')
-net =  Discriminator()
 
-net = net.to(device)
+aD =  Discriminator()
+aG = Generator()
+
+aD = aD.to(device)
+aG = aG.to(device)
+
 if device == 'cuda':
-    net = torch.nn.DataParallel(net)
+    aD = torch.nn.DataParallel(aD)
+    aG = torch.nn.DataParallel(aG)
     cudnn.benchmark = True
 
 learning_rate = 0.0001
+
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
+optimizer_g = torch.optim.Adam(aG.parameters(), lr=learning_rate, betas=(0,0.9))
+optimizer_d = torch.optim.Adam(aD.parameters(), lr=learning_rate, betas=(0,0.9))
 
 
 test_acc_ep = []
 test_loss_ep = []
+
+def calc_gradient_penalty(netD, real_data, fake_data):
+    DIM = 32
+    LAMBDA = 10
+    alpha = torch.rand(batch_size, 1)
+    alpha = alpha.expand(batch_size, int(real_data.nelement()/batch_size)).contiguous()
+    alpha = alpha.view(batch_size, 3, DIM, DIM)
+    alpha = alpha.to(device)
+    
+    fake_data = fake_data.view(batch_size, 3, DIM, DIM)
+    interpolates = alpha * real_data.detach() + ((1 - alpha) * fake_data.detach())
+
+    interpolates = interpolates.to(device)
+    interpolates.requires_grad_(True)
+
+    disc_interpolates, _ = netD(interpolates)
+
+    gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolates,
+                              grad_outputs=torch.ones(disc_interpolates.size()).to(device),
+                              create_graph=True, retain_graph=True, only_inputs=True)[0]
+
+    gradients = gradients.view(gradients.size(0), -1)                              
+    gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() * LAMBDA
+    return gradient_penalty
+
+n_classes = 10
+n_z = 100
+gen_train = 5
+
+np.random.seed(352)
+label = np.asarray(list(range(10))*10)
+noise = np.random.normal(0,1,(100,n_z))
+label_onehot = np.zeros((100,n_classes))
+label_onehot[np.arange(100), label] = 1
+noise[np.arange(100), :n_classes] = label_onehot[np.arange(100)]
+noise = noise.astype(np.float32)
+
+save_noise = torch.from_numpy(noise)
+save_noise = Variable(save_noise).to(device)
+
+
 def train(epoch):
     print('\nTraining Epoch: %d' % epoch)
-    if(epoch==50):
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = learning_rate/10.0
-    if(epoch==75):
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = learning_rate/100.0
-    net.train()
-    train_loss = 0
-    correct = 0
-    total = 0
-    for batch_idx, (inputs, targets) in enumerate(trainloader):
-        inputs, targets = inputs.to(device), targets.to(device)
-        _, out_fc10 = net(inputs)
+    start_time = time.time()
+    # Train the model
+    loss1, loss2, loss3, loss4, loss5 = [], [], [], [], []
+    acc1 = []
+    aG.train()
+    aD.train()
+    for batch_idx, (X_train_batch, Y_train_batch) in enumerate(trainloader):
+        if(Y_train_batch.shape[0] < batch_size):
+            continue
+        # train G
+        if((batch_idx%gen_train)==0):
+            for p in aD.parameters():
+                p.requires_grad_(False)
 
-        loss = criterion(out_fc10, targets)
+            aG.zero_grad()
+
+            label = np.random.randint(0,n_classes,batch_size)
+            noise = np.random.normal(0,1,(batch_size,n_z))
+            label_onehot = np.zeros((batch_size,n_classes))
+            label_onehot[np.arange(batch_size), label] = 1
+            noise[np.arange(batch_size), :n_classes] = label_onehot[np.arange(batch_size)]
+            noise = noise.astype(np.float32)
+            noise = torch.from_numpy(noise)
+            noise = Variable(noise).to(device)
+            fake_label = Variable(torch.from_numpy(label)).to(device)
+
+            fake_data = aG(noise)
+            gen_source, gen_class  = aD(fake_data)
+
+            gen_source = gen_source.mean()
+            gen_class = criterion(gen_class, fake_label)
+
+            gen_cost = -gen_source + gen_class
+            gen_cost.backward()
+
+            optimizer_g.step()
         
-        optimizer.zero_grad()
-        loss.backward()
-        if epoch > 2:
-            for group in optimizer.param_groups:
-                for p in group['params']:
-                    state = optimizer.state[p]
-                    if(state['step']>=1024):
-                        state['step'] = 1000
-        optimizer.step()
+        # train D
+        for p in aD.parameters():
+            p.requires_grad_(True)
+        for p in aG.parameters():
+            p.requires_grad_(False)
 
-        # train_loss += loss.item()
-        # _, predicted = out_fc10.max(1)
-        # total += targets.size(0)
-        # correct += predicted.eq(targets).sum().item()
+        aD.zero_grad()
 
-        # print(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-        #     % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        # train discriminator with input from generator
+        label = np.random.randint(0,n_classes,batch_size)
+        noise = np.random.normal(0,1,(batch_size,n_z))
+        label_onehot = np.zeros((batch_size,n_classes))
+        label_onehot[np.arange(batch_size), label] = 1
+        noise[np.arange(batch_size), :n_classes] = label_onehot[np.arange(batch_size)]
+        noise = noise.astype(np.float32)
+        noise = torch.from_numpy(noise)
+        noise = Variable(noise).cuda()
+        fake_label = Variable(torch.from_numpy(label)).cuda()
+        with torch.no_grad():
+            fake_data = aG(noise)
+
+        disc_fake_source, disc_fake_class = aD(fake_data)
+
+        disc_fake_source = disc_fake_source.mean()
+        disc_fake_class = criterion(disc_fake_class, fake_label)
+
+        # train discriminator with input from the discriminator
+        real_data = Variable(X_train_batch).cuda()
+        real_label = Variable(Y_train_batch).cuda()
+
+        disc_real_source, disc_real_class = aD(real_data)
+
+        prediction = disc_real_class.data.max(1)[1]
+        accuracy = ( float( prediction.eq(real_label.data).sum() ) /float(batch_size))*100.0
+
+        disc_real_source = disc_real_source.mean()
+        disc_real_class = criterion(disc_real_class, real_label)
+
+        gradient_penalty = calc_gradient_penalty(aD,real_data,fake_data)
+
+        disc_cost = disc_fake_source - disc_real_source + disc_real_class + disc_fake_class + gradient_penalty
+        disc_cost.backward()
+
+        optimizer_d.step()
+
+        # loss
+        loss1.append(gradient_penalty.item())
+        loss2.append(disc_fake_source.item())
+        loss3.append(disc_real_source.item())
+        loss4.append(disc_real_class.item())
+        loss5.append(disc_fake_class.item())
+        acc1.append(accuracy)
+        if((batch_idx%50)==0):
+            print(epoch, batch_idx, "%.2f" % np.mean(loss1), 
+                                    "%.2f" % np.mean(loss2), 
+                                    "%.2f" % np.mean(loss3), 
+                                    "%.2f" % np.mean(loss4), 
+                                    "%.2f" % np.mean(loss5), 
+                                    "%.2f" % np.mean(acc1))
         
-
 def test(epoch):
     global best_acc
     print('\nTesting Epoch: %d' % epoch)
-    net.eval()
-    test_loss = 0
-    correct = 0
-    total = 0
+    # Test the model
+    aD.eval()
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
-            inputs, targets = inputs.to(device), targets.to(device)
-            _, out_fc10 = net(inputs)
-            loss = criterion(out_fc10, targets)
+        test_accu = []
+        for batch_idx, (X_test_batch, Y_test_batch) in enumerate(testloader):
+            X_test_batch, Y_test_batch= Variable(X_test_batch).cuda(),Variable(Y_test_batch).cuda()
 
-            test_loss += loss.item()
-            _, predicted = out_fc10.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+            with torch.no_grad():
+                _, output = aD(X_test_batch)
 
-            print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
-        test_acc_ep.append(100.*correct/total)
-        test_loss_ep.append(test_loss/(batch_idx+1))
+            prediction = output.data.max(1)[1] # first column has actual prob.
+            accuracy = ( float( prediction.eq(Y_test_batch.data).sum() ) /float(batch_size))*100.0
+            test_accu.append(accuracy)
+            accuracy_test = np.mean(test_accu)
+    print('Testing',accuracy_test, time.time()-start_time)
         
     acc = 100.*correct/total
     if acc > best_acc:

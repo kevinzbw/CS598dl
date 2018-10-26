@@ -9,4 +9,4 @@ cd ~/DeepLearning/hw6
 . /opt/modules/default/init/bash
 module load bwpy/2.0.0-pre2
 module load cudatoolkit
-aprun -n 1 -N 1 python3.6 main.py
+aprun -n 1 -N 1 python3.6 main_wo_generator.py

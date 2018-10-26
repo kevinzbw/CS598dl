@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
+
 cfg = {
     'Discriminator': [(196, 1 ,32), (196, 2, 16), (196, 1, 16), 
         (196, 2, 8), (196, 1, 8), (196, 1, 8), (196, 1, 8), (196, 2, 4)],
@@ -34,7 +35,7 @@ class Discriminator(nn.Module):
         return nn.Sequential(*layers)
 
 class Generator(nn.Module):
-    def __init__(self, cfg_name):
+    def __init__(self):
         super(Generator, self).__init__()
         self.features = self._make_layers(cfg["Generator"])
         self.linear = nn.Linear(100, 196*4*4)
