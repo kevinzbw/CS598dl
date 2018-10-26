@@ -4,7 +4,7 @@ import torch.nn.functional as F
 cfg = {
     'Discriminator': [(196, 1 ,32), (196, 2, 16), (196, 1, 16), 
         (196, 2, 8), (196, 1, 8), (196, 1, 8), (196, 1, 8), (196, 2, 4)],
-    "Generator": ["decov", 196, 196, 196, "decov", 196, "decov", 3],
+    "Generator": ["deconv", 196, 196, 196, "deconv", 196, "deconv", 3],
 }
 
 
