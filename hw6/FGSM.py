@@ -44,7 +44,7 @@ testloader = enumerate(testloader)
 
 print('==> Loading the network')
 
-model = torch.load('model/cifar10.model'
+model = torch.load('model/cifar10.model')
 model = model.to(device)
 model.eval()
 
