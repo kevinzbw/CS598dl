@@ -67,7 +67,7 @@ for layer in layers:
     lr = 0.1
     weight_decay = 0.001
     for i in range(200):
-        _, output = model(X, layer)
+        output = model(X, layer)
 
         loss = -output[torch.arange(batch_size).type(torch.int64),torch.arange(batch_size).type(torch.int64)]
         gradients = torch.autograd.grad(outputs=loss, inputs=X,
