@@ -44,8 +44,10 @@ testloader = enumerate(testloader)
 
 print('==> Loading the network')
 if args.with_g:
+    print("with generator")
     model = torch.load('model/discriminator.model')
 else:
+    print("without generator")
     model = torch.load('model/cifar10.model')
 model = model.to(device)
 model.eval()
