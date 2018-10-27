@@ -44,8 +44,10 @@ testloader = enumerate(testloader)
 
 print('==> Loading the network')
 if args.with_g:
+    print("with generator")
     model = torch.load('model/discriminator.model')
 else:
+    print("without generator")
     model = torch.load('model/cifar10.model')
 model = model.to(device)
 model.eval()
@@ -55,6 +57,11 @@ if device == 'cuda':
     cudnn.benchmark = True
 
 batch_idx, (X_batch, Y_batch) = next(testloader)
+
+X_batch = Variable(X_batch,requires_grad=True).cuda()
+Y_batch_alternate = (Y_batch + 1)%10
+Y_batch_alternate = Variable(Y_batch_alternate).cuda()
+Y_batch = Variable(Y_batch).cuda()
 
 X = X_batch.mean(dim=0)
 X = X.repeat(10,1,1,1)

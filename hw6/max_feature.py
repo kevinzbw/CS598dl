@@ -56,6 +56,11 @@ if device == 'cuda':
 
 batch_idx, (X_batch, Y_batch) = next(testloader)
 
+X_batch = Variable(X_batch,requires_grad=True).cuda()
+Y_batch_alternate = (Y_batch + 1)%10
+Y_batch_alternate = Variable(Y_batch_alternate).cuda()
+Y_batch = Variable(Y_batch).cuda()
+
 X = X_batch.mean(dim=0)
 X = X.repeat(batch_size,1,1,1)
 
