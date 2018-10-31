@@ -56,7 +56,7 @@ y_test[0:12500] = 1
 
 vocab_size += 1
 
-model = BOW_model(300) # try 300 as well
+model = BOW_model(5000) # try 300 as well
 
 model.cuda()
 
