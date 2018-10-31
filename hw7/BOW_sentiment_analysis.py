@@ -18,7 +18,7 @@ from BOW_model import BOW_model
 vocab_size = 8000
 
 x_train = []
-with io.open('../preprocessed_data/imdb_train.txt','r',encoding='utf-8') as f:
+with io.open('./preprocessed_data/imdb_train.txt','r',encoding='utf-8') as f:
     lines = f.readlines()
 for line in lines:
     line = line.strip()
@@ -34,7 +34,7 @@ y_train[0:12500] = 1
 
 
 x_test = []
-with io.open('../preprocessed_data/imdb_test.txt','r',encoding='utf-8') as f:
+with io.open('./preprocessed_data/imdb_test.txt','r',encoding='utf-8') as f:
     lines = f.readlines()
 for line in lines:
     line = line.strip()
