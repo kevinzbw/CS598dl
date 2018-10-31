@@ -61,10 +61,10 @@ model = BOW_model(500) # try 300 as well
 model.cuda()
 
 
-opt = 'sgd'
-LR = 0.01
-# opt = 'adam'
-# LR = 0.001
+# opt = 'sgd'
+# LR = 0.01
+opt = 'adam'
+LR = 0.001
 if(opt=='adam'):
     optimizer = optim.Adam(model.parameters(), lr=LR)
 elif(opt=='sgd'):
@@ -72,7 +72,7 @@ elif(opt=='sgd'):
 
 
 batch_size = 200
-no_of_epochs = 15
+no_of_epochs = 6
 L_Y_train = len(y_train)
 L_Y_test = len(y_test)
 
