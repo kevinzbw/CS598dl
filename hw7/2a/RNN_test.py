@@ -93,8 +93,8 @@ for epoch in range(no_of_epochs):
 
     for i in range(0, L_Y_test, batch_size):
 
-        x_input2 = [x_train[j] for j in I_permutation[i:i+batch_size]]
-        sequence_length = sequence_length = (epoch+1)*50
+        x_input2 = [x_test[j] for j in I_permutation[i:i+batch_size]]
+        sequence_length = 100
         x_input = np.zeros((batch_size,sequence_length),dtype=np.int)
         for j in range(batch_size):
             x = np.asarray(x_input2[j])
@@ -104,13 +104,13 @@ for epoch in range(no_of_epochs):
             else:
                 start_index = np.random.randint(sl-sequence_length+1)
                 x_input[j,:] = x[start_index:(start_index+sequence_length)]
-        y_input = y_train[I_permutation[i:i+batch_size]]
+        y_input = y_test[I_permutation[i:i+batch_size]]
 
         data = Variable(torch.LongTensor(x_input)).cuda()
         target = Variable(torch.FloatTensor(y_input)).cuda()
 
         with torch.no_grad():
-            loss, pred = model(x_input,target)
+            loss, pred = model(x_input,target,train=False)
         
         prediction = pred >= 0.0
         truth = target >= 0.5
