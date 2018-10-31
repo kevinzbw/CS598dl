@@ -110,7 +110,7 @@ for epoch in range(no_of_epochs):
         target = Variable(torch.FloatTensor(y_input)).cuda()
 
         with torch.no_grad():
-            loss, pred = model(x_input,target,train=False)
+            loss, pred = model(data,target,train=False)
         
         prediction = pred >= 0.0
         truth = target >= 0.5
