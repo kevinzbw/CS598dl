@@ -56,7 +56,7 @@ y_test[0:12500] = 1
 
 vocab_size += 1
 
-model = BOW_model(500) # try 300 as well
+model = BOW_model(300) # try 300 as well
 
 model.cuda()
 
@@ -72,7 +72,7 @@ elif(opt=='sgd'):
 
 
 batch_size = 200
-no_of_epochs = 6
+no_of_epochs = 15
 L_Y_train = len(y_train)
 L_Y_test = len(y_test)
 
