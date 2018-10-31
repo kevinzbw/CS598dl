@@ -14,11 +14,11 @@ import io
 from BOW_model import BOW_model
 
 
-#imdb_dictionary = np.load('../preprocessed_data/imdb_dictionary.npy')
-vocab_size = 8000
+glove_embeddings = np.load('../preprocessed_data/glove_embeddings.npy')
+vocab_size = 100000
 
 x_train = []
-with io.open('./preprocessed_data/imdb_train.txt','r',encoding='utf-8') as f:
+with io.open('../preprocessed_data/imdb_train_glove.txt','r',encoding='utf-8') as f:
     lines = f.readlines()
 for line in lines:
     line = line.strip()
@@ -26,15 +26,18 @@ for line in lines:
     line = np.asarray(line,dtype=np.int)
 
     line[line>vocab_size] = 0
+    line = line[line!=0]
+
+    line = np.mean(glove_embeddings[line],axis=0)
 
     x_train.append(line)
+x_train = np.asarray(x_train)
 x_train = x_train[0:25000]
 y_train = np.zeros((25000,))
 y_train[0:12500] = 1
 
-
 x_test = []
-with io.open('./preprocessed_data/imdb_test.txt','r',encoding='utf-8') as f:
+with io.open('../preprocessed_data/imdb_test_glove.txt','r',encoding='utf-8') as f:
     lines = f.readlines()
 for line in lines:
     line = line.strip()
@@ -42,15 +45,19 @@ for line in lines:
     line = np.asarray(line,dtype=np.int)
 
     line[line>vocab_size] = 0
+    line = line[line!=0]
+    
+    line = np.mean(glove_embeddings[line],axis=0)
 
     x_test.append(line)
+x_test = np.asarray(x_test)
 y_test = np.zeros((25000,))
 y_test[0:12500] = 1
 
-
 vocab_size += 1
 
-model = BOW_model(vocab_size,500)
+model = BOW_model(500) # try 300 as well
+
 model.cuda()
 
 
@@ -92,12 +99,14 @@ for epoch in range(no_of_epochs):
 
     for i in range(0, L_Y_train, batch_size):
 
-        x_input = [x_train[j] for j in I_permutation[i:i+batch_size]]
-        y_input = np.asarray([y_train[j] for j in I_permutation[i:i+batch_size]],dtype=np.int)
+        x_input = x_train[I_permutation[i:i+batch_size]]
+        y_input = y_train[I_permutation[i:i+batch_size]]
+
+        data = Variable(torch.FloatTensor(x_input)).cuda()
         target = Variable(torch.FloatTensor(y_input)).cuda()
 
         optimizer.zero_grad()
-        loss, pred = model(x_input,target)
+        loss, pred = model(data,target)
         loss.backward()
 
         optimizer.step()   # update weights
@@ -131,12 +140,14 @@ for epoch in range(no_of_epochs):
 
     for i in range(0, L_Y_test, batch_size):
 
-        x_input = [x_test[j] for j in I_permutation[i:i+batch_size]]
-        y_input = np.asarray([y_test[j] for j in I_permutation[i:i+batch_size]],dtype=np.int)
-        target = Variable(torch.FloatTensor(y_input)).cuda()
+        x_input = x_test[I_permutation[i:i+batch_size]]
+        y_input = y_test[I_permutation[i:i+batch_size]]
 
+        data = Variable(torch.FloatTensor(x_input)).cuda()
+        target = Variable(torch.FloatTensor(y_input)).cuda()
+        
         with torch.no_grad():
-            loss, pred = model(x_input,target)
+            loss, pred = model(data,target)
         
         prediction = pred >= 0.0
         truth = target >= 0.5
