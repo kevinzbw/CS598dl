@@ -50,14 +50,14 @@ y_test[0:12500] = 1
 
 vocab_size += 1
 
-model = BOW_model(vocab_size,5000)
+model = BOW_model(vocab_size, 10)
 model.cuda()
 
 
 # opt = 'sgd'
 # LR = 0.01
 opt = 'adam'
-LR = 0.01
+LR = 0.001
 if(opt=='adam'):
     optimizer = optim.Adam(model.parameters(), lr=LR)
 elif(opt=='sgd'):
@@ -65,7 +65,7 @@ elif(opt=='sgd'):
 
 
 batch_size = 200
-no_of_epochs = 15
+no_of_epochs = 6
 L_Y_train = len(y_train)
 L_Y_test = len(y_test)
 
