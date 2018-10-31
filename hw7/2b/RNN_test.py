@@ -63,7 +63,7 @@ elif(opt=='sgd'):
 
 
 batch_size = 200
-no_of_epochs = 20
+no_of_epochs = 10
 L_Y_train = len(y_train)
 L_Y_test = len(y_test)
 
@@ -125,7 +125,7 @@ for epoch in range(no_of_epochs):
     time2 = time.time()
     time_elapsed = time2 - time1
 
-    print("  ", "%.2f" % (epoch_acc*100.0), "%.4f" % epoch_loss)
+    print(sequence_length, "%.2f" % (epoch_acc*100.0), "%.4f" % epoch_loss)
 
 torch.save(model,'rnn.model')
 data = [train_loss,train_accu,test_accu]
