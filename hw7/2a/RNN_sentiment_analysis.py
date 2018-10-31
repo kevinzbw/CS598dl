@@ -93,7 +93,7 @@ for epoch in range(no_of_epochs):
     for i in range(0, L_Y_train, batch_size):
 
         x_input2 = [x_train[j] for j in I_permutation[i:i+batch_size]]
-        sequence_length = 50
+        sequence_length = 250
         x_input = np.zeros((batch_size,sequence_length),dtype=np.int)
         for j in range(batch_size):
             x = np.asarray(x_input2[j])
@@ -145,7 +145,7 @@ for epoch in range(no_of_epochs):
         for i in range(0, L_Y_test, batch_size):
 
             x_input2 = [x_test[j] for j in I_permutation[i:i+batch_size]]
-            sequence_length = 50
+            sequence_length = 250
             x_input = np.zeros((batch_size,sequence_length),dtype=np.int)
             for j in range(batch_size):
                 x = np.asarray(x_input2[j])
