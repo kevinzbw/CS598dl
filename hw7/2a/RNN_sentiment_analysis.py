@@ -11,7 +11,7 @@ import os
 import sys
 import io
 
-from BOW_model import BOW_model
+from RNN_model import RNN_model
 
 
 #imdb_dictionary = np.load('../preprocessed_data/imdb_dictionary.npy')
@@ -50,7 +50,7 @@ y_test[0:12500] = 1
 
 vocab_size += 1
 
-model = BOW_model(vocab_size,500)
+model = RNN_model(vocab_size,500)
 model.cuda()
 
 
@@ -65,7 +65,7 @@ elif(opt=='sgd'):
 
 
 batch_size = 200
-no_of_epochs = 6
+no_of_epochs = 20
 L_Y_train = len(y_train)
 L_Y_test = len(y_test)
 
@@ -92,15 +92,25 @@ for epoch in range(no_of_epochs):
 
     for i in range(0, L_Y_train, batch_size):
 
-        x_input = [x_train[j] for j in I_permutation[i:i+batch_size]]
-        y_input = np.asarray([y_train[j] for j in I_permutation[i:i+batch_size]],dtype=np.int)
+        x_input2 = [x_train[j] for j in I_permutation[i:i+batch_size]]
+        sequence_length = 100
+        x_input = np.zeros((batch_size,sequence_length),dtype=np.int)
+        for j in range(batch_size):
+            x = np.asarray(x_input2[j])
+            sl = x.shape[0]
+            if(sl < sequence_length):
+                x_input[j,0:sl] = x
+            else:
+                start_index = np.random.randint(sl-sequence_length+1)
+                x_input[j,:] = x[start_index:(start_index+sequence_length)]
+        y_input = y_train[I_permutation[i:i+batch_size]]
+
+        data = Variable(torch.LongTensor(x_input)).cuda()
         target = Variable(torch.FloatTensor(y_input)).cuda()
 
         optimizer.zero_grad()
-        loss, pred = model(x_input,target)
+        loss, pred = model(data,target,train=True)
         loss.backward()
-
-        optimizer.step()   # update weights
         
         prediction = pred >= 0.0
         truth = target >= 0.5
@@ -129,33 +139,46 @@ for epoch in range(no_of_epochs):
     
     I_permutation = np.random.permutation(L_Y_test)
 
-    for i in range(0, L_Y_test, batch_size):
+    if((epoch+1)%3)==0:
+        for i in range(0, L_Y_test, batch_size):
 
-        x_input = [x_test[j] for j in I_permutation[i:i+batch_size]]
-        y_input = np.asarray([y_test[j] for j in I_permutation[i:i+batch_size]],dtype=np.int)
-        target = Variable(torch.FloatTensor(y_input)).cuda()
+            x_input2 = [x_train[j] for j in I_permutation[i:i+batch_size]]
+            sequence_length = 100
+            x_input = np.zeros((batch_size,sequence_length),dtype=np.int)
+            for j in range(batch_size):
+                x = np.asarray(x_input2[j])
+                sl = x.shape[0]
+                if(sl < sequence_length):
+                    x_input[j,0:sl] = x
+                else:
+                    start_index = np.random.randint(sl-sequence_length+1)
+                    x_input[j,:] = x[start_index:(start_index+sequence_length)]
+            y_input = y_train[I_permutation[i:i+batch_size]]
 
-        with torch.no_grad():
-            loss, pred = model(x_input,target)
-        
-        prediction = pred >= 0.0
-        truth = target >= 0.5
-        acc = prediction.eq(truth).sum().cpu().data.numpy()
-        epoch_acc += acc
-        epoch_loss += loss.data.item()
-        epoch_counter += batch_size
+            data = Variable(torch.LongTensor(x_input)).cuda()
+            target = Variable(torch.FloatTensor(y_input)).cuda()
 
-    epoch_acc /= epoch_counter
-    epoch_loss /= (epoch_counter/batch_size)
+            with torch.no_grad():
+                loss, pred = model(x_input,target)
+            
+            prediction = pred >= 0.0
+            truth = target >= 0.5
+            acc = prediction.eq(truth).sum().cpu().data.numpy()
+            epoch_acc += acc
+            epoch_loss += loss.data.item()
+            epoch_counter += batch_size
 
-    test_accu.append(epoch_acc)
+        epoch_acc /= epoch_counter
+        epoch_loss /= (epoch_counter/batch_size)
 
-    time2 = time.time()
-    time_elapsed = time2 - time1
+        test_accu.append(epoch_acc)
 
-    print("  ", "%.2f" % (epoch_acc*100.0), "%.4f" % epoch_loss)
+        time2 = time.time()
+        time_elapsed = time2 - time1
 
-torch.save(model,'BOW.model')
+        print("  ", "%.2f" % (epoch_acc*100.0), "%.4f" % epoch_loss)
+
+torch.save(model,'rnn.model')
 data = [train_loss,train_accu,test_accu]
 data = np.asarray(data)
 np.save('data.npy',data)
