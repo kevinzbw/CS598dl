@@ -5,7 +5,7 @@
 #PBS -e $PBS_JOBNAME.$PBS_JOBID.err
 #PBS -o $PBS_JOBNAME.$PBS_JOBID.out
 #PBS -M zw11@illinois.edu
-cd ~/DeepLearning/hw7
+cd ~/DeepLearning/hw7/1a
 . /opt/modules/default/init/bash
 module load bwpy/2.0.0-pre2
 module load cudatoolkit
