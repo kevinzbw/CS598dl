@@ -110,6 +110,8 @@ for epoch in range(no_of_epochs):
         optimizer.zero_grad()
         loss, pred = model(data,target,train=True)
         loss.backward()
+
+        optimizer.step()
         
         prediction = pred >= 0.0
         truth = target >= 0.5
