@@ -115,6 +115,11 @@ for epoch in range(0,75):
 
         norm = nn.utils.clip_grad_norm_(model.parameters(),2.0)
 
+        for group in optimizer.param_groups:
+            for p in group['params']:
+                state = optimizer.state[p]
+                if 'step' in state and state['step'] >= 1024:
+                    state['step'] = 1000
         optimizer.step()   # update gradients
         
         values,prediction = torch.max(pred,1)
