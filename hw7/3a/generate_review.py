@@ -88,7 +88,7 @@ for j in range(length_of_review):
     ## predict the next word
     embed = model.embedding(x)
 
-    h = model.lstm1(embed)
+    h = model.lstm1(embed[:,0,:])
     h = model.bn_lstm1(h)
     h = model.dropout1(h,dropout=0.3,train=False)
 
