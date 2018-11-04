@@ -50,7 +50,7 @@ y_test[0:12500] = 1
 
 vocab_size += 1
 
-model = RNN_model(vocab_size,500))
+model = RNN_model(vocab_size,500)
 
 language_model = torch.load('../3a/language.model')
 model.embedding.load_state_dict(language_model.embedding.state_dict())
