@@ -91,7 +91,7 @@ elif(opt=='sgd'):
 
 
 batch_size = 200
-no_of_epochs = 20
+no_of_epochs = 6
 L_Y_train = len(y_train)
 L_Y_test = len(y_test)
 
