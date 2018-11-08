@@ -12,6 +12,7 @@ import sys
 import io
 
 from RNN_model import RNN_model
+from RNN_language_model import RNN_language_model
 
 
 #imdb_dictionary = np.load('../preprocessed_data/imdb_dictionary.npy')
