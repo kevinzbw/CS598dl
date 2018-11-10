@@ -70,10 +70,10 @@ params = []
 #     params.append(param)
 # for param in model.bn_lstm1.parameters():
 #     params.append(param)
-# for param in model.lstm2.parameters():
-#     params.append(param)
-# for param in model.bn_lstm2.parameters():
-#     params.append(param)
+for param in model.lstm2.parameters():
+    params.append(param)
+for param in model.bn_lstm2.parameters():
+    params.append(param)
 for param in model.lstm3.parameters():
     params.append(param)
 for param in model.bn_lstm3.parameters():
@@ -120,7 +120,7 @@ for epoch in range(no_of_epochs):
     for i in range(0, L_Y_train, batch_size):
 
         x_input2 = [x_train[j] for j in I_permutation[i:i+batch_size]]
-        sequence_length = 250
+        sequence_length = 50
         x_input = np.zeros((batch_size,sequence_length),dtype=np.int)
         for j in range(batch_size):
             x = np.asarray(x_input2[j])
