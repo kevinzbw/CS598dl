@@ -66,10 +66,10 @@ model.cuda()
 params = []
 # for param in model.embedding.parameters():
 #     params.append(param)
-# for param in model.lstm1.parameters():
-#     params.append(param)
-# for param in model.bn_lstm1.parameters():
-#     params.append(param)
+for param in model.lstm1.parameters():
+    params.append(param)
+for param in model.bn_lstm1.parameters():
+    params.append(param)
 for param in model.lstm2.parameters():
     params.append(param)
 for param in model.bn_lstm2.parameters():
@@ -92,7 +92,7 @@ elif(opt=='sgd'):
 
 
 batch_size = 200
-no_of_epochs = 6
+no_of_epochs = 10
 L_Y_train = len(y_train)
 L_Y_test = len(y_test)
 
@@ -120,7 +120,7 @@ for epoch in range(no_of_epochs):
     for i in range(0, L_Y_train, batch_size):
 
         x_input2 = [x_train[j] for j in I_permutation[i:i+batch_size]]
-        sequence_length = 50
+        sequence_length = 250
         x_input = np.zeros((batch_size,sequence_length),dtype=np.int)
         for j in range(batch_size):
             x = np.asarray(x_input2[j])
