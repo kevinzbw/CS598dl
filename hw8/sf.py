@@ -122,8 +122,7 @@ for epoch in range(0,num_of_epochs):
     print(epoch, accuracy_epoch,time.time()-start_time)
 
 torch.save(model,'single_frame.model')
-pool_threads.close()
-pool_threads.terminate()
+
 
 
 ##### TEST
@@ -158,6 +157,8 @@ for i in range(0,len(test[0])-batch_size,batch_size):
     accuracy_test = np.mean(test_accu)
 print('Testing',accuracy_test,time.time()-t1)
 
+pool_threads.close()
+pool_threads.terminate()
 
 #### Testing
 
