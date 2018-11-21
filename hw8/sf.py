@@ -12,8 +12,8 @@ from torch.autograd import Variable
 import torch.distributed as dist
 import torchvision
 
-from helperFunctions import getUCF101
-from helperFunctions import loadFrame
+from helper import getUCF101
+from helper import loadFrame
 
 import h5py
 import cv2
