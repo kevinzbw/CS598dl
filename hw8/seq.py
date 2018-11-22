@@ -24,7 +24,7 @@ from multiprocessing import Pool
 
 IMAGE_SIZE = 224
 NUM_CLASSES = 101
-batch_size = 32
+batch_size = 24
 lr = 0.0001
 num_of_epochs = 10
 
