@@ -100,7 +100,7 @@ for i in range(len(test[0])):
     with torch.no_grad():
         x = np.asarray(data,dtype=np.float32)
         print(x.shape)
-        x = np.transpose(x, [1, 0, 2, 3])
+        x = np.transpose(x, [0, 2, 1, 3, 4])
         print(x.shape)
         x = Variable(torch.FloatTensor(x)).cuda().contiguous()
 
