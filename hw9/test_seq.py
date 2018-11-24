@@ -69,7 +69,7 @@ for i in range(len(test[0])):
     h = h5py.File(filename,'r')
     nFrames = len(h['video'])
 
-    data = np.zeros((1, nFrames,3,IMAGE_SIZE,IMAGE_SIZE),dtype=np.float32)
+    data = np.zeros((1,nFrames,3,IMAGE_SIZE,IMAGE_SIZE),dtype=np.float32)
 
     for j in range(nFrames):
         frame = h['video'][j]
@@ -81,7 +81,7 @@ for i in range(len(test[0])):
         data[0, j,:,:,:] = frame
     h.close()
 
-
+    data = np.transpose(data, [0, 2, 1, 3, 4])
 
     prediction = np.zeros((1,nFrames,NUM_CLASSES),dtype=np.float32)
 
