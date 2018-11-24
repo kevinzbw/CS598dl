@@ -69,7 +69,7 @@ for i in range(len(test[0])):
     h = h5py.File(filename,'r')
     nFrames = len(h['video'])
 
-    data = np.zeros((1,nFrames,3,IMAGE_SIZE,IMAGE_SIZE),dtype=np.float32)
+    data = np.zeros((nFrames,3,IMAGE_SIZE,IMAGE_SIZE),dtype=np.float32)
 
     for j in range(nFrames):
         frame = h['video'][j]
@@ -78,12 +78,10 @@ for i in range(len(test[0])):
         frame = frame/255.0
         frame = (frame - mean)/std
         frame = frame.transpose(2,0,1)
-        data[0, j,:,:,:] = frame
+        data[j,:,:,:] = frame
     h.close()
 
-    data = np.transpose(data, [0, 2, 1, 3, 4])
-
-    prediction = np.zeros((1,nFrames,NUM_CLASSES),dtype=np.float32)
+    prediction = np.zeros((nFrames,NUM_CLASSES),dtype=np.float32)
 
     # loop_i = list(range(0,nFrames,200))
     # loop_i.append(nFrames)
@@ -101,12 +99,15 @@ for i in range(len(test[0])):
 
     with torch.no_grad():
         x = np.asarray(data,dtype=np.float32)
+        print(x.shape)
+        x = np.transpose(x, [1, 0, 2, 3])
+        print(x.shape)
         x = Variable(torch.FloatTensor(x)).cuda().contiguous()
 
         output = model(x)
     prediction = output.cpu().numpy()
     print(prediction.shape)
-    prediction = prediction[0]
+    # prediction = prediction[0]
 
     filename = filename.replace(data_directory+'UCF-101-hdf5/',prediction_directory)
     if(not os.path.isfile(filename)):
