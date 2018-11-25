@@ -88,7 +88,7 @@ for i in range(len(test[0])):
 
     prediction_single = np.zeros((nFrames,NUM_CLASSES),dtype=np.float32)
 
-    loop_i = list(range(0,nFrames,200))
+    loop_i = list(range(0,nFrames,16))
     loop_i.append(nFrames)
 
     for j in range(len(loop_i)-1):
@@ -127,7 +127,7 @@ for i in range(len(test[0])):
 
     prediction = np.mean(np.log(prediction),axis=0)
     prediction_single = np.mean(np.log(prediction_single), axis=0)
-    prediction = (prediction + prediction_single) / 2
+    prediction = 0.75*prediction + 0.25*prediction_single
 
     argsort_pred = np.argsort(-prediction)[0:10]
 
@@ -158,4 +158,4 @@ sorted_results = results[indices]
 for i in range(NUM_CLASSES):
     print(sorted_list[i],sorted_results[i],number_of_examples[indices[i]])
 
-np.save('seq_confusion_matrix.npy',confusion_matrix)
+np.save('comb_confusion_matrix.npy',confusion_matrix)
