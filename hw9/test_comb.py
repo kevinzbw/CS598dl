@@ -38,7 +38,7 @@ model3d.avgpool = nn.AdaptiveAvgPool3d(1)
 model3d.cuda()
 
 # model = torch.load('single_frame.model')
-model = torch.load('single_frame.model', map_location=lambda storage, location: 'cpu')
+model = torch.load('single_frame.model', map_location='cpu')
 model.cpu()
 
 ##### save predictions directory
