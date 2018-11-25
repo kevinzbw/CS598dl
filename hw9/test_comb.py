@@ -37,8 +37,9 @@ model3d.avgpool = nn.AdaptiveAvgPool3d(1)
 
 model3d.cuda()
 
-model = torch.load('single_frame.model')
-model.cuda()
+# model = torch.load('single_frame.model')
+model = torch.load('single_frame.model', map_location=lambda storage, location: 'cpu')
+model.cpu()
 
 ##### save predictions directory
 prediction_directory = 'comb-UCF-101-predictions/'
@@ -88,7 +89,7 @@ for i in range(len(test[0])):
 
     prediction_single = np.zeros((nFrames,NUM_CLASSES),dtype=np.float32)
 
-    loop_i = list(range(0,nFrames,16))
+    loop_i = list(range(0,nFrames,200))
     loop_i.append(nFrames)
 
     for j in range(len(loop_i)-1):
@@ -96,7 +97,7 @@ for i in range(len(test[0])):
 
         with torch.no_grad():
             x = np.asarray(data_batch,dtype=np.float32)
-            x = Variable(torch.FloatTensor(x)).cuda().contiguous()
+            x = Variable(torch.FloatTensor(x)).cpu().contiguous()
 
             output = model(x)
 
