@@ -81,35 +81,23 @@ for i in range(len(test[0])):
         data[0, j,:,:,:] = frame
     h.close()
 
-    # prediction = np.zeros((1, nFrames,NUM_CLASSES),dtype=np.float32)
+    prediction = np.zeros((1, nFrames, NUM_CLASSES),dtype=np.float32)
 
-    # loop_i = list(range(0,nFrames,200))
+    loop_i = list(range(0,nFrames,16))
     # loop_i.append(nFrames)
 
-    # for j in range(len(loop_i)-1):
-    #     data_batch = data[loop_i[j]:loop_i[j+1]]
+    for j in range(len(loop_i)-1):
+        data_batch = data[:, loop_i[j]:loop_i[j+1]]
 
-    #     with torch.no_grad():
-    #         x = np.asarray(data_batch,dtype=np.float32)
-    #         x = Variable(torch.FloatTensor(x)).cuda().contiguous()
+        with torch.no_grad():
+            x = np.asarray(data_batch,dtype=np.float32)
+            x = np.transpose(x, [0, 2, 1, 3, 4])
+            x = Variable(torch.FloatTensor(x)).cuda().contiguous()
 
-    #         output = model(x)
-
-    #     prediction[loop_i[j]:loop_i[j+1]] = output.cpu().numpy()
-    trim_idx = nFrames // 16 * 16
-    data = data[:, :trim_idx, :, :, :]
-    with torch.no_grad():
-        x = np.asarray(data,dtype=np.float32)
-        print(x.shape)
-        x = np.transpose(x, [0, 2, 1, 3, 4])
-        print(x.shape)
-        x = Variable(torch.FloatTensor(x)).cuda().contiguous()
-
-        output = model(x)
-    prediction = output.cpu().numpy()
-    print(prediction.shape)
+            output = model(x)
+            print(output.size())
+        prediction[0, loop_i[j]:loop_i[j+1]] = output.cpu().numpy()
     prediction = prediction[0]
-    print(prediction.shape)
 
     filename = filename.replace(data_directory+'UCF-101-hdf5/',prediction_directory)
     if(not os.path.isfile(filename)):
