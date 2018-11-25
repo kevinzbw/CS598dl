@@ -96,7 +96,8 @@ for i in range(len(test[0])):
     #         output = model(x)
 
     #     prediction[loop_i[j]:loop_i[j+1]] = output.cpu().numpy()
-
+    trim_idx = nFrames // 16 * 16
+    data = data[:, :trim_idx, :, :, :]
     with torch.no_grad():
         x = np.asarray(data,dtype=np.float32)
         print(x.shape)
