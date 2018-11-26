@@ -93,9 +93,10 @@ for i in range(len(test[0])):
         x = np.asarray(data,dtype=np.float32)
         x = np.transpose(x, [0, 2, 1, 3, 4])
         x = Variable(torch.FloatTensor(x)).cuda().contiguous()
-
         output = model(x)
+        del x
     prediction = output.cpu().numpy()
+    del output
     prediction = prediction[0]
 
     # softmax
