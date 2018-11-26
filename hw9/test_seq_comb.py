@@ -92,11 +92,10 @@ for i in range(len(test[0])):
     with torch.no_grad():
         x = np.asarray(data,dtype=np.float32)
         x = np.transpose(x, [0, 2, 1, 3, 4])
-        x = Variable(torch.FloatTensor(x)).cuda()
+        x = Variable(torch.FloatTensor(x)).cuda().contiguous()
+
         output = model(x)
-        del x
     prediction = output.cpu().numpy()
-    del output
     prediction = prediction[0]
 
     # softmax
@@ -105,7 +104,8 @@ for i in range(len(test[0])):
 
     prediction = np.mean(np.log(prediction),axis=0)
     preds.append(prediction)
-    print("idx:", i, "time", time.time()-t1)
+
+    print(i, time.time()-t1)
 
 preds = np.array(preds)
-np.save("seq_preds.npy", preds)
+np.save("seq_pred.npy", preds)
